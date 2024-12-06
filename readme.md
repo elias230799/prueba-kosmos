@@ -50,3 +50,10 @@ Elias Camacho Ramirez
 
 Licencia
 Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
+
+
+Configuración de la Base de Datos
+Para modificar la configuración de la base de datos, edita el archivo `application.yml` en el directorio `src/main/resources`. Aquí puedes cambiar la URL, el nombre de usuario y la contraseña de la base de datos, así como otras configuraciones relacionadas con JPA y Hibernate.
+
+Scripts de Base de Datos
+Los scripts para la base de datos se encuentran en el directorio `src/main/resources/scripts`. Aquí puedes encontrar los archivos SQL necesarios para la creación y actualización de las tablas y datos de la base de datos.
