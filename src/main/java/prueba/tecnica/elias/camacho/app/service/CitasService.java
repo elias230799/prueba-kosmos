@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import prueba.tecnica.elias.camacho.app.domain.entity.Cita;
 import prueba.tecnica.elias.camacho.app.domain.repository.CitasRepository;
@@ -83,6 +85,50 @@ public class CitasService {
     }
 
     /**
+     * Cancela una cita si aún está pendiente de realizarse.
+     * 
+     * @param id el ID de la cita a cancelar.
+     */
+    @Transactional
+    public void cancelarCita(Long id) {
+        Optional<Cita> citaOpt = repository.findById(id);
+        if (citaOpt.isPresent()) {
+            Cita cita = citaOpt.get();
+            if (cita.getHorarioConsulta().isAfter(LocalDateTime.now())) {
+                repository.deleteById(id);
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No se puede cancelar una cita que ya ha pasado.");
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita no encontrada.");
+        }
+    }
+
+    /**
+     * Edita una cita existente tomando en cuenta las reglas de alta.
+     * 
+     * @param id   el ID de la cita a editar.
+     * @param cita los nuevos datos de la cita.
+     * @return la cita editada.
+     */
+    @Transactional
+    public Cita editarCita(Long id, Cita cita) {
+        Optional<Cita> citaOpt = repository.findById(id);
+        if (citaOpt.isPresent()) {
+            Cita citaExistente = citaOpt.get();
+            citaExistente.setConsultorio(cita.getConsultorio());
+            citaExistente.setDoctor(cita.getDoctor());
+            citaExistente.setHorarioConsulta(cita.getHorarioConsulta());
+            citaExistente.setNombrePaciente(cita.getNombrePaciente());
+            validarCita(citaExistente);
+            return repository.save(citaExistente);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita no encontrada.");
+        }
+    }
+
+    /**
      * Valida las reglas de negocio para la creación y actualización de citas.
      * 
      * @param cita la cita a validar.
@@ -93,32 +139,30 @@ public class CitasService {
 
         // No se puede agendar cita en un mismo consultorio a la misma hora.
         if (repository.existsByConsultorioAndHorarioConsultaBetween(cita.getConsultorio(), inicio, fin)) {
-            throw new IllegalArgumentException("No se puede agendar cita en el mismo consultorio a la misma hora.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede agendar cita en el mismo consultorio a la misma hora.");
         }
 
         // No se puede agendar cita para un mismo Dr. a la misma hora.
         if (repository.existsByDoctorAndHorarioConsultaBetween(cita.getDoctor(), inicio, fin)) {
-            throw new IllegalArgumentException("No se puede agendar cita para el mismo Dr. a la misma hora.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede agendar cita para un mismo Dr. a la misma hora.");
         }
 
         // No se puede agendar cita para un paciente a la misma hora ni con menos de 2
         // horas de diferencia para el mismo día.
-        LocalDateTime inicioDia = inicio.truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime finDia = inicioDia.plusDays(1);
-        if (repository.existsByNombrePacienteAndHorarioConsultaBetween(cita.getNombrePaciente(), inicioDia, finDia)) {
-            List<Cita> citasPaciente = repository
-                    .findByNombrePacienteAndHorarioConsultaBetween(cita.getNombrePaciente(), inicioDia, finDia);
-            for (Cita c : citasPaciente) {
-                if (ChronoUnit.HOURS.between(c.getHorarioConsulta(), inicio) < 2) {
-                    throw new IllegalArgumentException(
-                            "No se puede agendar cita para un paciente con menos de 2 horas de diferencia para el mismo día.");
-                }
-            }
+        if (repository.existsByNombrePacienteAndHorarioConsultaBetween(cita.getNombrePaciente(), inicio.minusHours(2),
+                fin.plusHours(2))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede agendar cita para un paciente a la misma hora ni con menos de 2 horas de diferencia para el mismo día.");
         }
 
         // Un mismo doctor no puede tener más de 8 citas en el día.
+        LocalDateTime inicioDia = inicio.toLocalDate().atStartOfDay();
+        LocalDateTime finDia = inicio.toLocalDate().atTime(23, 59, 59);
         if (repository.countByDoctorAndHorarioConsultaBetween(cita.getDoctor(), inicioDia, finDia) >= 8) {
-            throw new IllegalArgumentException("Un mismo doctor no puede tener más de 8 citas en el día.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Un mismo doctor no puede tener más de 8 citas en el día.");
         }
     }
 

@@ -68,12 +68,8 @@ public class CitasController {
      */
     @PostMapping
     public ResponseEntity<Cita> createCita(@Valid @RequestBody Cita cita) {
-        try {
-            Cita nuevaCita = citasService.save(cita);
-            return new ResponseEntity<>(nuevaCita, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        Cita nuevaCita = citasService.save(cita);
+        return new ResponseEntity<>(nuevaCita, HttpStatus.CREATED);
     }
 
     /**
@@ -85,16 +81,8 @@ public class CitasController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Cita> updateCita(@PathVariable @NotNull Long id, @Valid @RequestBody Cita cita) {
-        if (!citasService.findById(id).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        cita.setId(id);
-        try {
-            Cita citaActualizada = citasService.save(cita);
-            return new ResponseEntity<>(citaActualizada, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        Cita citaActualizada = citasService.editarCita(id, cita);
+        return new ResponseEntity<>(citaActualizada, HttpStatus.OK);
     }
 
     /**
@@ -106,10 +94,20 @@ public class CitasController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCita(@PathVariable @NotNull Long id) {
-        if (!citasService.findById(id).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
         citasService.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Cancela una cita por su ID.
+     * 
+     * @param id el ID de la cita a cancelar.
+     * @return un estado 204 si se cancela correctamente, o un estado 404 si no se
+     *         encuentra.
+     */
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelarCita(@PathVariable @NotNull Long id) {
+        citasService.cancelarCita(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
