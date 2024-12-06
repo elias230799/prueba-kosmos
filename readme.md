@@ -28,10 +28,25 @@ Este proyecto es una aplicación de gestión de citas médicas para un hospital.
 
 1. Clona el repositorio:
    ```sh
-   git clone https://github.com/tu-usuario/gestion-citas-medicas.git
+   git clone https://github.com/elias230799/prueba-kosmos.git
+
+La aplicación estará disponible en http://localhost:8080.
+
+Documentación de la API
+La documentación de la API está disponible en Swagger. Puedes acceder a ella en:
+http://localhost:8080/swagger-ui.html
+
+Estructura del Proyecto
+Entidad Persona: Clase base para representar una persona.
+Entidad Doctor: Extiende de Persona y añade la especialidad del doctor.
+Entidad Consultorio: Representa un consultorio con número y piso.
+Entidad Cita: Representa una cita médica con consultorio, doctor, horario y nombre del paciente.
 
 Versión
 Versión actual: 1.0.0-SNAPSHOT
 
 Autor
 Elias Camacho Ramirez
+
+Licencia
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
