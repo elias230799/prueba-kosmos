@@ -50,8 +50,4 @@ public class Cita implements Serializable {
     @NotBlank(message = "El nombre del paciente no puede estar en blanco")
     @Column(name = "nombre_paciente", nullable = false)
     private String nombrePaciente;
-
-    public Cita() {
-
-    }
 }

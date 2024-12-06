@@ -1,5 +1,6 @@
 package prueba.tecnica.elias.camacho.app.web.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,8 +68,12 @@ public class CitasController {
      */
     @PostMapping
     public ResponseEntity<Cita> createCita(@Valid @RequestBody Cita cita) {
-        Cita nuevaCita = citasService.save(cita);
-        return new ResponseEntity<>(nuevaCita, HttpStatus.CREATED);
+        try {
+            Cita nuevaCita = citasService.save(cita);
+            return new ResponseEntity<>(nuevaCita, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -84,8 +89,12 @@ public class CitasController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         cita.setId(id);
-        Cita citaActualizada = citasService.save(cita);
-        return new ResponseEntity<>(citaActualizada, HttpStatus.OK);
+        try {
+            Cita citaActualizada = citasService.save(cita);
+            return new ResponseEntity<>(citaActualizada, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -102,5 +111,22 @@ public class CitasController {
         }
         citasService.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Consulta citas por fecha, consultorio y doctor.
+     * 
+     * @param fecha         la fecha de las citas.
+     * @param consultorioId el ID del consultorio de las citas.
+     * @param doctorId      el ID del doctor de las citas.
+     * @return una lista de citas que coinciden con los criterios de búsqueda.
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Cita>> buscarCitas(
+            @RequestParam(required = false) LocalDateTime fecha,
+            @RequestParam(required = false) Long consultorioId,
+            @RequestParam(required = false) Long doctorId) {
+        List<Cita> citas = citasService.buscarCitas(fecha, consultorioId, doctorId);
+        return new ResponseEntity<>(citas, HttpStatus.OK);
     }
 }
