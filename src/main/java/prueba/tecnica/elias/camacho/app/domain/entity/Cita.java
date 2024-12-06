@@ -3,6 +3,8 @@ package prueba.tecnica.elias.camacho.app.domain.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +46,7 @@ public class Cita implements Serializable {
     @NotNull(message = "El horario de consulta no puede ser nulo")
     @Future(message = "El horario de consulta debe ser una fecha futura")
     @Column(name = "horario_consulta", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime horarioConsulta;
 
     @NotNull(message = "El nombre del paciente no puede ser nulo")
